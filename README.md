@@ -144,7 +144,59 @@ You can only get backend code if the target is vulnerable, such as:
 
 `https://target.com/.git/`
 
-### ✔ Exposed Node modules or environment
+Below is a **fully automated Bash script** that:
+
+✔ Crawls **all JavaScript files** from a target
+✔ Downloads them into a folder
+✔ Extracts **API endpoints**
+✔ Scans for **secrets / tokens / credentials**
+✔ Extracts potential **DOM-XSS sinks**
+✔ Generates a **report**
+
+Safe, legal, and perfect for **bug bounty recon**.
+
+---
+
+# 🟩 **🔥 FULL AUTOMATED BASH SCRIPT**
+
+
+---
+
+# 🟦 **How to run**
+
+```
+chmod +x js_recon.sh
+./js_recon.sh target.com
+```
+
+Example:
+
+```
+./js_recon.sh example.com
+```
+
+---
+
+# 🟨 **Requirements**
+
+Install the recon tools:
+
+```
+sudo apt install golang -y
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install github.com/hakluke/hakrawler@latest
+```
+
+Export Go bin:
+
+```
+export PATH=$PATH:$(go env GOPATH)/bin
+```
+
+---
+
+
 
 `https://target.com/.env`
 `https://target.com/package.json`
