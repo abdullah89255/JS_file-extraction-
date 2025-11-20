@@ -266,6 +266,230 @@ export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
 ---
+Below is the **FULL ULTIMATE JS RECON BASH SCRIPT** with **ALL EXTRA FEATURES** added:
+
+✔ JS crawling (gau, waybackurls, hakrawler)
+✔ Smart JS downloader
+✔ Minified JS deobfuscator
+✔ Endpoint extractor & deduplicator
+✔ Swagger/OpenAPI detector
+✔ JWT finder
+✔ Base64 secret decoder
+✔ Secret scanner (advanced regex)
+✔ DOM XSS sink finder
+✔ HTML report generator
+
+This is a **complete one-command JS reconnaissance suite** for bug-bounty use.
+
+---
+
+# 🟩 **🔥 FINAL FULL SCRIPT — `js_recon_ultimate.sh`**
+
+Save this:
+
+```bash
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: ./js_recon_ultimate.sh <target-domain>"
+    exit 1
+fi
+
+TARGET=$1
+OUTPUT="js_recon_$TARGET"
+
+mkdir -p $OUTPUT/js_files
+mkdir -p $OUTPUT/results
+mkdir -p $OUTPUT/decoded
+mkdir -p $OUTPUT/swagger
+
+echo "[+] Starting Ultimate JS Recon for: $TARGET"
+echo "[+] Output folder: $OUTPUT"
+echo
+
+#############################################
+# STEP 1 — Gather JS URLs
+#############################################
+
+echo "[+] Collecting JS URLs with gau..."
+gau $TARGET | grep "\.js" >> $OUTPUT/js_urls_raw.txt
+
+echo "[+] Collecting JS URLs with waybackurls..."
+waybackurls $TARGET | grep "\.js" >> $OUTPUT/js_urls_raw.txt
+
+echo "[+] Collecting JS URLs with hakrawler..."
+echo $TARGET | hakrawler -js -depth 3 -scope subs >> $OUTPUT/js_urls_raw.txt
+
+sort -u $OUTPUT/js_urls_raw.txt -o $OUTPUT/js_urls.txt
+
+echo "[+] Total JS URLs collected: $(wc -l < $OUTPUT/js_urls.txt)"
+echo
+
+#############################################
+# STEP 2 — Download JS Files
+#############################################
+echo "[+] Downloading JS files..."
+wget -q -i $OUTPUT/js_urls.txt -P $OUTPUT/js_files/
+
+echo "[+] JS files downloaded: $(ls $OUTPUT/js_files | wc -l)"
+echo
+
+#############################################
+# STEP 3 — De-minify JS Files
+#############################################
+echo "[+] De-minifying JS files (js-beautify required)..."
+
+for f in $OUTPUT/js_files/*.js; do
+    js-beautify "$f" > "${f%.js}_beautified.js"
+done
+
+echo "[+] De-minification completed."
+echo
+
+#############################################
+# STEP 4 — Extract API Endpoints
+#############################################
+
+echo "[+] Extracting API endpoints..."
+grep -RoiE "(https?://[a-zA-Z0-9./?&_\-=%]+)" $OUTPUT/js_files > $OUTPUT/results/api_endpoints_raw.txt
+
+sort -u $OUTPUT/results/api_endpoints_raw.txt > $OUTPUT/results/api_endpoints.txt
+
+#############################################
+# STEP 5 — Detect Swagger/OpenAPI (.json)
+#############################################
+
+echo "[+] Searching for Swagger/OpenAPI URLs..."
+grep -RoiE "(swagger|openapi|\.json)" $OUTPUT/js_files > $OUTPUT/swagger/swagger_hits.txt
+
+#############################################
+# STEP 6 — Scan for Secrets (Advanced)
+#############################################
+echo "[+] Scanning for secrets..."
+
+grep -RniE "(api[_-]?key|secret|token|bearer|auth|pwd|password|access[_-]?key|firebase|aws|gcp|google|client[_-]?id)" \
+    $OUTPUT/js_files > $OUTPUT/results/secret_hits.txt
+
+#############################################
+# STEP 7 — Detect JWTs
+#############################################
+
+echo "[+] Searching for JWT tokens..."
+
+grep -RniE "eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*" \
+    $OUTPUT/js_files > $OUTPUT/results/jwt_hits.txt
+
+#############################################
+# STEP 8 — Detect Base64 Secrets & Auto Decode
+#############################################
+
+echo "[+] Finding Base64 encoded strings..."
+
+grep -RoiE "[A-Za-z0-9+/]{20,}={0,2}" $OUTPUT/js_files > $OUTPUT/results/base64_strings.txt
+
+echo "[+] Decoding Base64 strings..."
+
+while read line; do
+    decoded=$(echo "$line" | base64 -d 2>/dev/null)
+    if [ ! -z "$decoded" ]; then
+        echo "[+] $line → $decoded" >> $OUTPUT/decoded/base64_decoded.txt
+    fi
+done < $OUTPUT/results/base64_strings.txt
+
+#############################################
+# STEP 9 — Detect DOM XSS sinks
+#############################################
+
+echo "[+] Searching for DOM-XSS sinks..."
+
+grep -RniE "(document\.write|innerHTML|outerHTML|location|eval|setTimeout|setInterval|document\.URL)" \
+    $OUTPUT/js_files > $OUTPUT/results/dom_xss.txt
+
+#############################################
+# STEP 10 — HTML Report Generator
+#############################################
+
+REPORT=$OUTPUT/results/report.html
+
+echo "[+] Generating HTML report..."
+
+cat <<EOF > $REPORT
+<html>
+<head>
+<title>JS Recon Report - $TARGET</title>
+<style>
+body { font-family: Arial; margin: 20px; }
+h2 { color: #00aaff; }
+pre { background: #f0f0f0; padding: 10px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<h1>JavaScript Recon Report</h1>
+<h2>Target: $TARGET</h2>
+
+<h2>API Endpoints</h2>
+<pre>$(cat $OUTPUT/results/api_endpoints.txt)</pre>
+
+<h2>Secrets Found</h2>
+<pre>$(cat $OUTPUT/results/secret_hits.txt)</pre>
+
+<h2>JWT Tokens</h2>
+<pre>$(cat $OUTPUT/results/jwt_hits.txt)</pre>
+
+<h2>Base64 Decoded Values</h2>
+<pre>$(cat $OUTPUT/decoded/base64_decoded.txt)</pre>
+
+<h2>DOM XSS Sinks</h2>
+<pre>$(cat $OUTPUT/results/dom_xss.txt)</pre>
+
+<h2>Swagger/OpenAPI Hits</h2>
+<pre>$(cat $OUTPUT/swagger/swagger_hits.txt)</pre>
+
+</body>
+</html>
+EOF
+
+echo "[+] Report generated at: $REPORT"
+echo "[+] JS Recon Completed Successfully!"
+```
+
+---
+
+# 🟦 **INSTALL REQUIREMENTS**
+
+Run:
+
+```bash
+sudo apt install nodejs npm -y
+npm install -g js-beautify
+```
+
+Tools:
+
+```bash
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install github.com/hakluke/hakrawler@latest
+```
+
+Add Go binaries:
+
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+```
+
+---
+
+# 🟩 **Run the Tool**
+
+```
+chmod +x js_recon_ultimate.sh
+./js_recon_ultimate.sh example.com
+```
+
+---
+
+
 
 
 
