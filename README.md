@@ -45,6 +45,30 @@ wget -i js_urls.txt -P js_files/
 ```
 
 ---
+## Usage Examples:
+
+```bash
+# BIG Mode (secrets + endpoints)
+python3 mega_js_scanner.py --mode big --jsdir /path/to/js/files
+
+# DEEP Mode (AST analysis)
+python3 mega_js_scanner.py --mode deep --jsdir /path/to/js/files
+
+# DOM Mode (DOM-XSS detection)
+python3 mega_js_scanner.py --mode dom --jsdir /path/to/js/files
+
+# PROFESSIONAL Mode (all scans)
+python3 mega_js_scanner.py --mode professional --jsdir /path/to/js/files
+
+# GAU Mode (fetch JS from domain)
+python3 mega_js_scanner.py --mode gau --target example.com
+```
+
+## Required Dependencies:
+
+```bash
+pip3 install colorama tqdm aiohttp esprima
+```
 
 # 🔥 **Method 2 — Using Hakrawler to crawl JS**
 
